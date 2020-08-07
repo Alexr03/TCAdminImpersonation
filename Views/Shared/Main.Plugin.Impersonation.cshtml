@@ -41,8 +41,9 @@
                                  .HtmlAttributes(new {style = "width: 100%"})
                                  )
                          </div>
-                         <div id="ipAddressBox"></div>
-                         @(Html.Kendo().Button().Name("impersonateButton").HtmlAttributes(new {@class = "k-primary", style="left:50%"}).Icon("user").Content("Impersonate").Events(x => x.Click("impersonateAs")))
+                         <div id="buttons" style="width: 100%">
+                             @(Html.Kendo().Button().Name("impersonateButton").HtmlAttributes(new {@class = "k-primary"}).Icon("user").Content("Impersonate").Events(x => x.Click("impersonateAs")))
+                         </div>
                       </text>)
             )
 
@@ -61,5 +62,14 @@
                 window.location = '/Impersonation/AsUser?userId=' + value;
             }
         </script>
+                                                        
+        <style>
+            #buttons {
+              width: 100%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+        </style>
     }
 }
