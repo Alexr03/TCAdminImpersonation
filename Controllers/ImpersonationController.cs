@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Security;
+using TCAdmin.Interfaces.Logging;
 using TCAdmin.SDK.Objects;
 using TCAdmin.SDK.Web.MVC;
 using TCAdmin.SDK.Web.MVC.Controllers;
@@ -14,11 +15,22 @@ namespace TCAdminImpersonation.Controllers
         public ActionResult AsUser(int userId)
         {
             var currentUser = TCAdmin.SDK.Session.GetCurrentUser();
+            if (currentUser.DemoMode)
+            {
+                TCAdmin.SDK.LogManager.Write(
+                    $"{currentUser.UserName} tried to impersonate but failed due to they are a demo account.",
+                    LogType.Information);
+                return Redirect(Request.UrlReferrer?.ToString());
+            }
+            
             var user = new User(userId);
             if (currentUser.UserType == UserType.Admin && user.UserType == UserType.Admin ||
                 currentUser.UserType == UserType.SubAdmin && user.UserType == UserType.SubAdmin ||
                 currentUser.UserType == UserType.SubAdmin && user.UserType == UserType.Admin)
             {
+                TCAdmin.SDK.LogManager.Write(
+                    $"{currentUser.UserName} tried to impersonate {user.UserName} but failed due to {currentUser.UserType} > {user.UserType}",
+                    LogType.Information);
                 return Redirect(Request.UrlReferrer?.ToString());
             }
 
@@ -41,6 +53,8 @@ namespace TCAdminImpersonation.Controllers
                 oldTicket.Expiration, oldTicket.IsPersistent, cookieData.ToString());
             cookie.Value = FormsAuthentication.Encrypt(newTicket);
             HttpContext.Response.Cookies.Add(cookie);
+            
+            TCAdmin.SDK.LogManager.Write($"{currentUser.UserName} is now impersonating as {user.UserName}", LogType.Information);
 
             return Redirect("/");
         }
@@ -63,6 +77,8 @@ namespace TCAdminImpersonation.Controllers
             cookie.Value = FormsAuthentication.Encrypt(newTicket);
             System.Web.HttpContext.Current.Response.Cookies.Add(cookie);
             RemoveImpersonationCookies();
+            
+            TCAdmin.SDK.LogManager.Write($"User ID: {impersonationUserCookie} ended impersonation.", LogType.Information);
 
             return Redirect("/");
         }
