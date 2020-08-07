@@ -1,0 +1,65 @@
+﻿@using Kendo.Mvc.UI
+@using TCAdmin.SDK.Objects
+@using TCAdmin.SDK.Security
+@using TCAdminImpersonation.Controllers
+@{
+    if (ImpersonationController.IsImpersonating())
+    {
+        <text>
+            <script>
+                $(document).ready(function() {
+                    const ul = document.getElementById("session-split_optionlist");
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+                    <a role="button" onclick="kendo.ui.progress($(document.body), true); window.location = '/Impersonation/Revert'" tabindex="0" class="k-button k-button-icontext" id="toolbar-endimpersonation" data-overflow="auto" aria-disabled="false"><span style="padding-right: 5px" class="fas fa-user-secret"></span>End Impersonation</a>`
+                    ul.appendChild(li);
+                });
+            </script>
+        </text>
+    }
+    else if (SecurityManager.CurrentUserHasRequiredPagePermissions("07405876-e8c2-4b24-a774-4ef57f596384", 1060))
+    {
+        @(Html.Kendo().Window()
+            .Name("impersonateWindow")
+            .Modal(true)
+            .Title("Impersonate as a user")
+            .Visible(false)
+            .Width(400)
+            .Content(@<text>
+                         <strong>Choose a user below</strong>
+                         <div>
+                             @(Html.Kendo().DropDownList()
+                                 .Name("users")
+                                 .Filter(FilterType.Contains)
+                                 .BindTo(TCAdmin.SDK.Objects.User.GetMyUsers().Cast<User>().Select(x => new DropDownListItem
+                                 {
+                                     Value = x.UserId.ToString(),
+                                     Text = x.UserName + " | " + x.FullName,
+                                     Selected = false
+                                 }))
+                                 .OptionLabel("Choose User")
+                                 .HtmlAttributes(new {style = "width: 100%"})
+                                 )
+                         </div>
+                         <div id="ipAddressBox"></div>
+                         @(Html.Kendo().Button().Name("impersonateButton").HtmlAttributes(new {@class = "k-primary", style="left:50%"}).Icon("user").Content("Impersonate").Events(x => x.Click("impersonateAs")))
+                      </text>)
+            )
+
+        <script>
+            $(document).ready(function() {
+                const ul = document.getElementById("session-split_optionlist");
+                const li = document.createElement("li");
+                li.innerHTML = `
+                <a role="button" onclick='$("#impersonateWindow").data("kendoWindow").open().center()' tabindex="0" class="k-button k-button-icontext" id="toolbar-endimpersonation" data-overflow="auto" aria-disabled="false"><span style="padding-right: 5px" class="fas fa-user-secret"></span>Impersonate As</a>`
+                ul.appendChild(li);
+            });
+            
+            function impersonateAs(e){
+                const value = $("#users").data("kendoDropDownList").value();
+                kendo.ui.progress($("#impersonateWindow"), true);
+                window.location = '/Impersonation/AsUser?userId=' + value;
+            }
+        </script>
+    }
+}
