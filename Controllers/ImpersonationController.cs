@@ -39,7 +39,6 @@ namespace TCAdminImpersonation.Controllers
             return Redirect("/");
         }
 
-        [ParentAction("Service", "Home")]
         public ActionResult Revert()
         {
             var impersonationUserCookie =
