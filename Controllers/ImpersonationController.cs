@@ -15,6 +15,12 @@ namespace TCAdminImpersonation.Controllers
         {
             var currentUser = TCAdmin.SDK.Session.GetCurrentUser();
             var user = new User(userId);
+            if (currentUser.UserType == UserType.Admin && user.UserType == UserType.Admin ||
+                currentUser.UserType == UserType.SubAdmin && user.UserType == UserType.SubAdmin ||
+                currentUser.UserType == UserType.SubAdmin && user.UserType == UserType.Admin)
+            {
+                return Redirect(Request.UrlReferrer?.ToString());
+            }
 
             var cookie = FormsAuthentication.GetAuthCookie(user.UserId.ToString(), false);
             var cookieData = new FormsAuthenticationCookieData
@@ -66,7 +72,8 @@ namespace TCAdminImpersonation.Controllers
             // ReSharper disable once PossibleNullReferenceException
             HttpContext.Response.Cookies.Get("Impersonation").Expires = DateTime.Now.AddDays(-1);
             // ReSharper disable once PossibleNullReferenceException
-            HttpContext.Response.Cookies.Get("ImpersonationUser").Expires = DateTime.Now.AddDays(-1);;
+            HttpContext.Response.Cookies.Get("ImpersonationUser").Expires = DateTime.Now.AddDays(-1);
+            ;
         }
 
         public static bool IsImpersonating()
